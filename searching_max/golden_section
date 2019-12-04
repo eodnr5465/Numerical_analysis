@@ -1,0 +1,77 @@
+function [x,fx,ea,iter] = goldmax_2014104038(f,xl,xu,es,maxit,varargin)
+%   input
+%   첫번째 인자는 function에 관한 인자
+%   두번째 인자는 low boundary
+%   세번째 인자는 upper boundary
+%   네번째 인자는 disered 백분율 상대오차
+%   다섯번째 인자는 최대 iterative 횟수
+%   이후 fucntion에 사용되어져야 하는 나머지 constant
+%   default : es가 0.0001로 되고 maxit 이 50이 된다.
+
+%   output
+%   root : 원하는 근
+%   fx   : 원하는 근에 도달했을 시 function value
+%   ea   : 출력된 근의 백분율 상대 오차
+%   iter : 반복한 횟수
+if nargin<3
+    erroer('at leatst 3 input arguments required')
+end
+% 입력 인자가 3개 이하일시 error meassage 출력
+
+if nargin < 4 | isempty(es)
+    es = 0.0001;
+end
+% 입력인자가 fx,xl,xu만 주어질 때 es값을 default 0.0001
+
+if nargin < 5 | isempty(maxit)
+    maxit = 50;
+end
+% 입력인자가 fx,xl,xu,es까지 주어질 때 maxit값을 default 50
+
+coef = (1+sqrt(5))/2;
+% 황금분할 탐색법 coefficient
+
+iter=0;
+% 반복된 횟수를 입력
+
+while(1)
+    d = (coef-1)*(xu - xl);
+    % x1 = xl +d , x2 = xu -d, d = (coef - 1)*(xu - xl)
+    x1 = xl + d;
+    x2 = xu - d;
+    
+    if f(x1,varargin{:}) > f(x2,varargin{:})
+    % f(x1) > f(x2) 이면 기울기가 양의 방향 최대값은 x1 위에 혹은 x1 x2 사이에 있음
+        xopt = x1;
+        % 처음 추정한 극대값을 xopt 에 저장
+        xl = x2;
+        % low boundary를 업데이트하면서 x2 밑으로는 필요없으므로 짜름
+    else
+    % f(x1) <= f(x2) 이면 기울기가 음의 방향 최대값은 x2 아래에 혹은 x1 x2 사이에 있음
+         xopt = x2;
+         % 처음 추정한 극대값을 xopt 에 저장
+         xu = x1;
+         % upper boundary를 업데이트하면서 x1 위로는 필요없으므로 짜름
+    end
+    
+    iter=iter+1;
+    % 횟수 증가
+    
+    if xopt~=0
+        % 백분율 상대 오차를 구할 시 최대 오차가 추정시 (2 - coefficient)(xu-xl)이므로 
+        % 그 값에 xpot를 정규화 시키면 백분율 상대 오차가 될 수 있다.
+        ea = (2 - coef) * abs((xu - xl) / xopt) * 100;
+    end
+ 
+    if ea <= es | iter >= maxit
+        break
+    end
+    % 설정한 es 보다 백분율 상대오차가 낮거나
+    % 설정한 iterate 횟수보다 많이 했으면 while문 종료
+    
+end
+
+x=xopt
+% 극대값일 때의 정의역 출력
+fx=f(xopt,varargin{:})
+% 극대값 출력

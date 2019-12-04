@@ -1,0 +1,59 @@
+function [root,fx,ea,iter] = modsecant_2014104038(func,x1,del,es,maxit)
+
+%   input
+%   첫번째 인자는 function에 관한 인자
+%   두번째 인자는 초깃값 1
+%   세번째 인자는 변동량
+%   네번째 인자는 disered 백분율 상대오차
+%   다섯번째 인자는 최대 iterative 횟수
+%   이후 fucntion에 사용되어져야 하는 나머지 constant
+%   default : es가 0.0001로 되고 maxit 이 50이 된다.
+
+%   output
+%   root : 원하는 근
+%   fx   : 원하는 근에 도달했을 시 function value
+%   ea   : 출력된 근의 백분율 상대 오차
+%   iter : 반복한 횟수
+
+if nargin<3
+    error('at leatst 3 input arguments required')
+end 
+% 입력 인자가 3개 이하일시 error meassage 출력
+
+if nargin<5, maxit=50; end
+% 입력인자가 fx,x1,x2,es만 주어질 때 maxit값을 default 50
+
+if nargin<4, es=0.0001; end
+% 입력인자가 fx,x1,x2만 주어질 때 es값을 default 0.0001
+
+
+iter = 0;
+delx = del * x1;
+% iterate한 횟수를 기록
+
+while (1)
+    
+    x3 = x1 - func(x1)*delx/(func(x1+delx) - func(x1));
+    % 다음 근을 전향 차분(del >0) or 후향 차분(del<0) 근사한 도함수를 통해 구한다.
+    iter = iter + 1;
+    % 1회 증가
+    
+    if x3 ~= 0, ea = abs((x3 - (x1))/x3) * 100; end
+    % 근을 못찾으면 이전 추정근과 현재 추정근 사이의 백분율 상대오차 구하기
+    
+    if ea <= es | iter >= maxit, break, end
+    % 원하는 백분율 상대오차 보다 작아지면 동작그만
+    
+    x1 = x3;
+    % 다음 보간법을 위해 근 update
+    
+end
+
+root = x3;
+% 최종 근 = x3 
+fx = func(root)
+% 최종 근 도달시 f(root)값
+ea
+% 마지막 근의 상대오차
+iter
+% 보간법을 한 횟수

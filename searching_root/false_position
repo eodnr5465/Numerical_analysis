@@ -1,0 +1,109 @@
+function [root, fx, ea, iter] = falsepos_plot_2014104038(func, xl, xu, es, maxit, plotting, varargin)
+%   input
+%   첫번째 인자는 function에 관한 인자
+%   두번째 인자는 low boundary
+%   세번째 인자는 upper boundary
+%   네번째 인자는 desired 백분율 상대오차
+%   다섯번째 인자는 최대 iterative 횟수
+%   이후 fucntion에 사용되어져야 하는 나머지 constant
+%   default : es가 0.0001로 되고 maxit 이 50이 된다.
+
+%   output
+%   root : 원하는 근
+%   fx   : 원하는 근에 도달했을 시 function value
+%   ea   : 출력된 근의 백분율 상대 오차
+%   iter : 반복한 횟수
+
+if nargin<3
+    error('at leatst 3 input arguments required')
+end
+% 입력 인자가 3개 이하일시 error meassage 출력
+
+test = func(xl,varargin{:}) * func(xu, varargin{:});
+% variable test : low boudary 와 upper boundary 사이에 sign change판단
+
+if test > 0
+    error('no sign change')
+end
+% 초깃값 부터 sign change가 없으면 falseposition 으로 근을 찾을 수 없음.
+
+if nargin < 4 | isempty(es)
+    es = 0.0001;
+end
+% 입력인자가 fx,xl,xu만 주어질 때 es값을 default 0.0001
+
+if nargin < 5 | isempty(maxit)
+    maxit = 50;
+end
+% 입력인자가 fx,xl,xu,es까지 주어질 때 maxit값을 default 50
+
+if nargin < 6 | isempty(plotting)
+    plotting = 'off';
+end
+% 입력인자가 fx,xl,xu,es,maxit 까지 주어질 때 defalt : plotting off 
+
+iter = 0;   % 횟수를 담을 variable
+xr = xl;    % xr값을 이동시키면서 근을 찾을 예정 초기값 = low boundary
+ea = 100;   % 백분율 상대오차 초깃값 100
+
+while (1)
+    
+    xrold = xr;
+    % xrold 값에 이전 xr 값을 넣음
+    xr = xu-(func(xu,varargin{:})*(xl-xu))/(func(xl,varargin{:})-func(xu,varargin{:}));
+     % xr값 update : false position의 방법을 사용.
+    iter = iter + 1;
+    % n회 사용시 n회를 표현할 변수를 1씩증가 시키면서 구현
+    
+    if xr ~= 0
+        ea = abs((xr - xrold)/xr) * 100;
+    end
+    % xr이 근에 도달하지 못했으면 xr에 대한 xrold와의 백분율 상대오차를 update
+    
+    test = func(xl,varargin{:}) * func(xr, varargin{:});
+     % update된 f(xr)과 f(xl)사이에 근의 존재유무를 판별
+     
+    if test < 0
+        xu = xr;
+         % test < 0 이면 근의 위치가 xl 과 xr 사이에 존재 
+         % 따라서 xu를 xr로 대체
+    elseif test >0
+        xl = xr;
+         % test > 0 이면 근의 위치가 xr 과 xu 사이에 존재
+         % 따라서 xl을 xr로 대체
+    else
+         % test = 0 이면 근을 real root를 찾음
+        ea = 0;
+         % 상대오차가 없음
+    end
+    
+    if ea <= es | iter >= maxit
+        break
+    end
+    % 설정한 es 보다 백분율 상대오차가 낮거나
+    % 설정한 iterate 횟수보다 많이 했으면 while문 종료
+    
+end
+
+if strcmp('on',plotting) == 1 % strcmp(a,b) a와 b를 비교시 같으면 1 반환
+    x = linspace(30 , 210, 1000); % plotting을 위한 정의역 변수 matrix
+    
+    for(i = 1 :1000)
+    root = xr;
+    % while 문이 종료 될때의 xr값이 root
+    fx = func(xr, varargin{:});
+    % while 문이 종료 될때의 f(xr)값이 거의 0일 함수 값
+    y(i) = func(x(i) , varargin{:});
+    % 치역 matrix를 for 문으로 생성
+    end
+    
+    plot(x,y,root,fx,'ro')
+    %plot 2차원 graph
+
+elseif strcmp('on',plotting) == 0 % strcmp(a,b) a와 b를 비교시 다르면 0 반환
+    root = xr;
+    % while 문이 종료 될때의 xr값이 root
+    fx = func(xr, varargin{:});
+    % while 문이 종료 될때의 f(xr)값이 거의 0일 함수 값
+    
+end

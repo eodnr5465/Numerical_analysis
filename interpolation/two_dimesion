@@ -1,0 +1,106 @@
+function interp2_2014104038 = int(x,y,z,xx,yy,state)
+% input : x data ,y data, z = f(x,y) data (x 같은 value 끼리 row) estiamte 할 x값
+% ,y 값 ,  Newton or Largrange
+% output : z interpolation
+if state == "Newton"
+    % Newton method
+    n = length(x); % x 행렬 길이
+    m = length(y); % y 행렬 길이
+    A = size(z); % z의 size를 행 렬 저장
+
+if A(1) ~= n
+    % 행 = n 개 여야됨
+    error('z(x) and x must be same length')
+end
+    % 열 = m 개 여야됨
+if A(2) ~= m
+    error('z(y) and y must be same length')
+end
+
+
+b = zeros(n,n,m);
+% b 행렬에 처음 두개 인자는 z를 x 방향으로 interpolation 하기 위함이고
+% 마지막 인자는 y를 어떤 value로 고정한 지에 따라 b 값들을 만듬
+for k = 1:m
+    b(:,1,k) = z(:,k); % y값에 따라 z 열 value가 달라지므로 행 단위로 b 첫줄에 집어넣음
+    for j = 2:n
+        for i = 1:n-j+1
+        b(i,j,k) = (b(i+1,j-1,k)-b(i,j-1,k))/(x(i+j-1)-x(i)); % newton method for x axis
+        end
+    end
+    xt = ones(1,m); % xt가 y고정이 뭐냐에 따라 각각 존재
+    zxint(k) = b(1,1,k); % coefficient imformation을 저장
+    for j = 1:n-1
+        xt(k) = xt(k)*(xx-x(j)); % x에 대한 newtorn n차 보간법
+        zxint(k) = zxint(k)+b(1,j+1,k)*xt(k); 
+    end    
+end
+  
+% 마지막은 그냥 zxint를 coefficient factor로 생각하고 real zint 값을 찾음
+m = length(y);
+d = zeros(n,n);
+d(:,1) = zxint(:); 
+for j = 2:m
+    for i = 1:m-j+1
+    d(i,j) = (d(i+1,j-1)-d(i,j-1))/(y(i+j-1)-y(i));
+    end
+end
+yt = 1;
+zint = d(1,1);
+for j = 1:n-1
+    yt = yt*(yy-y(j));
+    zint = zint+d(1,j+1)*yt;
+end
+interp2_2014104038 = zint;
+end
+
+
+
+
+
+
+if state == "Lagrange"
+   
+    % Lagrange method
+    n = length(x); % x 행렬 길이
+    m = length(y); % y 행렬 길이
+    A = size(z); % z의 size를 행 렬 저장
+
+if A(1) ~= n
+    % 행 = n 개 여야됨
+    error('z(x) and x must be same length')
+end
+    % 열 = m 개 여야됨
+if A(2) ~= m
+    error('z(y) and y must be same length')
+end
+
+ %  y 값을 1~m 으로 고정하고 x에 대해서 먼저 Lagrange interpolation
+    ss = 0;
+    s = zeros(size(y));
+    for k = 1:m
+        for i = 1:n
+        product = z(i,k);
+            for j = 1:n
+                if i ~= j
+                product = product*(xx-x(j))/(x(i)-x(j));
+                end
+            end
+        s(k) = s(k)+product;
+        end
+    end
+    
+  % x에 대해 interpoloation 이끝난 배열에 ydp 대한 interpoloation 후 summation
+    for t = 1:m
+        product2 = s(t);
+            for t1 = 1:m
+                if t ~= t1
+                    product2 = product2 * (yy - y(t1))/(y(t)-y(t1));
+                end
+                
+            end
+         ss = ss + product2;
+    end
+    
+    interp2_2014104038 = ss;
+end
